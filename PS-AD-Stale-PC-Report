@@ -1,0 +1,23 @@
+# Import the Active Directory module
+Import-Module ActiveDirectory
+
+# Set the search scope to the current domain
+$searchScope = "subtree"
+
+# Set the LDAP filter to search for all computer objects
+$ldapFilter = "(objectCategory=computer)"
+
+# Set the LDAP properties to retrieve for each computer object
+$propertiesToLoad = @("name")
+
+# Set the date threshold for determining whether a computer has logged in recently
+$lastLogonDateThreshold = (Get-Date).AddDays(-60)
+
+# Search for all computer objects in the current domain
+$computers = Get-ADObject -Filter $ldapFilter -Properties $propertiesToLoad -SearchScope $searchScope | Where-Object {
+  # Check if the computer's last logon date is before the threshold
+  $_.LastLogonDate -lt $lastLogonDateThreshold
+}
+
+# Save the results to a text file on the desktop
+$computers | Select-Object -ExpandProperty name | Out-File -FilePath "$env:USERPROFILE\Desktop\InactiveComputers.txt"
